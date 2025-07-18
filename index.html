@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recordatorio Rifa</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    button { padding: 10px 20px; font-size: 16px; background: green; color: white; border: none; cursor: pointer; border-radius: 5px; }
+    pre { background: #fff; padding: 15px; border-radius: 5px; max-height: 400px; overflow: auto; }
+  </style>
+</head>
+<body>
+
+<h2>📲 Enviar recordatorio de pago</h2>
+<button onclick="enviarRecordatorios()">Enviar mensajes pendientes</button>
+
+<pre id="log"></pre>
+
+<script>
+const API_WHATSAPP = "/.netlify/functions/enviarWhatsapp";
+const API_BOLETAS = "/.netlify/functions/obtenerBoletas";
+const PRECIO_BOLETA = 20000;
+const DELAY_MS = 10000; // 10 segundos
+
+const log = msg => {
+  document.getElementById("log").textContent += msg + "\n";
+};
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function enviarRecordatorios() {
+  log("🔄 Cargando boletas...");
+
+  const res = await fetch(API_BOLETAS);
+  const data = await res.json();
+
+  const pendientes = new Map();
+
+  for (const b of data.boletas) {
+    if (b.estado === "pendiente") {
+      const clave = `${b.nombre}|${b.telefono}`;
+      if (!pendientes.has(clave)) pendientes.set(clave, []);
+      pendientes.get(clave).push(b.numero);
+    }
+  }
+
+  log(`📦 Encontrados ${pendientes.size} participantes con pagos pendientes.\n`);
+
+  for (const [clave, numeros] of pendientes) {
+    const [nombre, telefono] = clave.split("|");
+    const cantidad = numeros.length;
+    const total = cantidad * PRECIO_BOLETA;
+    const lista = numeros.join(", ");
+
+    const indicativo = telefono.startsWith("3") ? "57" : "1";
+    const numeroConIndicativo = indicativo + telefono;
+
+    const texto = `👋 Hola ${nombre}, buen día 😊
+
+🎟️ Tus boletas reservadas son: ${lista}
+💰 Total a pagar: ${total.toLocaleString('es-CO')} COP
+
+Para asegurar tu participación en la rifa del PC 🖥️ realiza el pago al número *3157862008* (Nequi, Daviplata o con llaves).
+
+¡Gracias y mucha suerte! 🍀`;
+
+    const payload = {
+      number: numeroConIndicativo,
+      text: texto
+    };
+
+    try {
+      const res = await fetch(API_WHATSAPP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const r = await res.json();
+      if (!r.success) throw new Error("No enviado");
+      log(`✅ Mensaje enviado a ${nombre} (${numeroConIndicativo})`);
+    } catch (e) {
+      log(`❌ Error con ${nombre} (${numeroConIndicativo}): ${e.message}`);
+    }
+
+    await delay(DELAY_MS); // Espera antes de continuar
+  }
+
+  log("\n✅ Proceso terminado.");
+}
+</script>
+
+</body>
+</html>
