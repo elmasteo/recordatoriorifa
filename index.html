@@ -46,16 +46,30 @@ async function enviarRecordatorios() {
 
   log(`📦 Encontrados ${pendientes.size} participantes con pagos pendientes.\n`);
 
-  for (const [clave, numeros] of pendientes) {
-    const [nombre, telefono] = clave.split("|");
-    const cantidad = numeros.length;
-    const total = cantidad * PRECIO_BOLETA;
-    const lista = numeros.join(", ");
+for (const [clave, numeros] of pendientes) {
+  const [nombre, telefono] = clave.split("|");
+  const cantidad = numeros.length;
+  const total = cantidad * PRECIO_BOLETA;
+  const lista = numeros.join(", ");
 
-    const indicativo = telefono.startsWith("3") ? "57" : "1";
-    const numeroConIndicativo = indicativo + telefono;
+  // Formateo del número
+  let numeroFormateado = telefono;
+  if (telefono.startsWith("0")) {
+    numeroFormateado = telefono.slice(1); // Eliminar el 0
+  }
 
-    const texto = `👋 Hola ${nombre}, buen día 😊
+  let indicativo;
+  if (telefono.startsWith("0")) {
+    indicativo = "34"; // España
+  } else if (telefono.startsWith("3")) {
+    indicativo = "57"; // Colombia
+  } else {
+    indicativo = "1";  // Otro genérico
+  }
+
+  const numeroConIndicativo = indicativo + numeroFormateado;
+
+  const texto = `👋 Hola ${nombre}, buen día 😊
 
 🎟️ Tus boletas reservadas son: ${lista}
 💰 Total a pagar: ${total.toLocaleString('es-CO')} COP
@@ -64,27 +78,28 @@ Para asegurar tu participación en la rifa del PC 🖥️ realiza el pago al nú
 
 ¡Gracias y mucha suerte! 🍀`;
 
-    const payload = {
-      number: numeroConIndicativo,
-      text: texto
-    };
+  const payload = {
+    number: numeroConIndicativo,
+    text: texto
+  };
 
-    try {
-      const res = await fetch(API_WHATSAPP, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+  try {
+    const res = await fetch(API_WHATSAPP, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-      const r = await res.json();
-      if (!r.success) throw new Error("No enviado");
-      log(`✅ Mensaje enviado a ${nombre} (${numeroConIndicativo})`);
-    } catch (e) {
-      log(`❌ Error con ${nombre} (${numeroConIndicativo}): ${e.message}`);
-    }
-
-    await delay(DELAY_MS); // Espera antes de continuar
+    const r = await res.json();
+    if (!r.success) throw new Error("No enviado");
+    log(`✅ Mensaje enviado a ${nombre} (${numeroConIndicativo})`);
+  } catch (e) {
+    log(`❌ Error con ${nombre} (${numeroConIndicativo}): ${e.message}`);
   }
+
+  await delay(DELAY_MS); // Espera antes de continuar
+}
+
 
   log("\n✅ Proceso terminado.");
 }
