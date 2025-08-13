@@ -99,13 +99,13 @@ async function enviarRecordatorios() {
 
   const pendientes = new Map();
 
-  for (const b of data.boletas) {
-    if (b.estado === "pendiente") {
-      const clave = `${b.nombre}|${b.telefono}`;
-      if (!pendientes.has(clave)) pendientes.set(clave, []);
-      pendientes.get(clave).push(b.numero);
-    }
+  for (const b of data) {
+  if (b.estado === "pendiente") {
+    const clave = `${b.nombre}|${b.telefono}`;
+    if (!pendientes.has(clave)) pendientes.set(clave, []);
+    pendientes.get(clave).push(b.numero);
   }
+}
 
   log(`📦 Encontrados ${pendientes.size} participantes con pagos pendientes.\n`);
 
