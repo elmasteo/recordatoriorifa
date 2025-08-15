@@ -132,23 +132,26 @@ for (const [clave, numeros] of pendientes) {
 
   const numeroConIndicativo = indicativo + numeroFormateado;
 
-  const texto1 = `👋 Hola ${nombre}, buen día 😊
+// Obtener fechas dinámicas
+const hoy = new Date();
+const manana = new Date();
+manana.setDate(hoy.getDate() + 1);
+
+const opcionesFecha = { day: 'numeric', month: 'long', year: 'numeric' };
+const fechaHoy = hoy.toLocaleDateString('es-CO', opcionesFecha);
+const fechaManana = manana.toLocaleDateString('es-CO', opcionesFecha);
+
+const texto = `👋 Hola ${nombre}, buen día 😊
 
 🎟️ Tu(s) boleta(s) reservada(s) son: ${lista}
 💰 Total a pagar: ${total.toLocaleString('es-CO')} COP
 
-Para asegurar tu participación en la rifa del PC 🖥️ realiza el pago al número *3157862008* (Nequi, Daviplata o con llaves).
+⚠️ *Última oportunidad*: si no realizas el pago de tu(s) boleta(s) el día de hoy *${fechaHoy}* con plazo máximo hasta mañana *${fechaManana}*, procederemos a liberarla(s) para que otra persona pueda reservarla(s).
+
+💳 Realiza el pago al número: *3157862008* (Nequi, Daviplata o con llaves).
 
 ¡Gracias y mucha suerte! 🍀`;
 
-  const texto = `👋 Hola ${nombre}, buen día 😊
-
-🎟️ Tu(s) boleta(s) reservada(s) son: ${lista}
-💰 Total a pagar: ${total.toLocaleString('es-CO')} COP
-
- Es tu última oportunidad para asegurar tu participación en la rifa del PC 🖥️ si no realizas el pago de tu(s) boleta(s) el día de hoy 20 con plazo máximo hasta mañana 21 procederemos a liberarla(s), es decir volverá(n) a estar disponibles para ser reservada(s) por alguien más, aquí los detalles de la cuenta número:*3157862008* (Nequi, Daviplata o con llaves).
-
-¡Gracias y mucha suerte! 🍀`;
 
   const payload = {
     number: numeroConIndicativo,
